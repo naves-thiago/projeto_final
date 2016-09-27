@@ -1,0 +1,94 @@
+-- Mockups (provavelmente funcoes em C)
+
+callbacks = {}
+
+function driver1_cb(param, cb)
+	print("Driver 1", param)
+	callbacks[1] = cb
+	return 1 -- handle
+end
+
+function driver2_cb(param, cb)
+	print("Driver 2", param)
+	callbacks[2] = cb
+end
+
+function driver2_cancel(handle)
+	print("Driver 2 cancel "..handle)
+	return true -- retorna sucesso ou falha
+end
+
+----------
+
+
+-- API
+function driver1_fg(param)
+	local context = coroutine.running()
+	local cb = function ()
+					coroutine.resume(context)
+				end
+	driver1_cb(param, cb)
+	coroutine.yield()
+end
+
+function driver2_bg(param)
+	local state   = "running" -- "cancelled", "done"
+	local handle  = nil       -- handle used to cancel / wait
+	local context = nil	      -- waiting coroutine
+	local cb = function()     -- driver callback
+					state = "done"
+					if context then
+						coroutine.resume(context)
+					end
+				end
+	handle = driver2_cb(param, cb)
+	return {
+		cancel = function()
+					if state == "done" then
+						return false
+					elseif state == "running" then
+						return driver2_cancel(handle)
+					else
+						return true -- already cancelled, but ok
+					end
+				end,
+		wait = function()
+					if state == "done" then
+						return true
+					elseif state == "running" then
+						context = coroutine.running()
+						coroutine.yield()
+						return true -- talvez trocar pelo retorno do yield
+									-- para retornar um status do driver
+					else
+						return false -- was cancelled
+					end
+				end
+	}
+end
+
+wait_events = coroutine.yield
+
+-- Teste
+function main()
+	while true do
+		print("Ini main")
+		driver1_fg("")
+		print("depois fg")
+		h = driver2_bg("")
+		print("depois bg")
+		h.wait()
+		print("depois driver2 wait")
+		print("esperando eventos")
+		wait_events()
+		print("retorno de wait_events")
+
+	end
+end
+
+-- Ponto de entrada da aplicacao do usuario
+coroutine.wrap(main)()
+
+-- while(true) do
+--	espera_evento()
+-- end
