@@ -11,6 +11,7 @@ end
 function driver2_cb(param, cb)
 	print("Driver 2", param)
 	callbacks[2] = cb
+	return 2 -- handle
 end
 
 function driver2_cancel(handle)
@@ -20,18 +21,17 @@ end
 
 ----------
 
-
--- API
-function driver1_fg(param)
+-- Wrappers
+function coroutine_wrap_fg(f, param)
 	local context = coroutine.running()
 	local cb = function ()
 					coroutine.resume(context)
 				end
-	driver1_cb(param, cb)
+	f(param, cb)
 	coroutine.yield()
 end
 
-function driver2_bg(param)
+function coroutine_wrap_bg(f, f_cancel, param)
 	local state   = "running" -- "cancelled", "done"
 	local handle  = nil       -- handle used to cancel / wait
 	local context = nil	      -- waiting coroutine
@@ -41,13 +41,13 @@ function driver2_bg(param)
 						coroutine.resume(context)
 					end
 				end
-	handle = driver2_cb(param, cb)
+	handle = f(param, cb)
 	return {
 		cancel = function()
 					if state == "done" then
 						return false
 					elseif state == "running" then
-						return driver2_cancel(handle)
+						return f_cancel(handle)
 					else
 						return true -- already cancelled, but ok
 					end
@@ -65,6 +65,16 @@ function driver2_bg(param)
 					end
 				end
 	}
+end
+-----------
+
+-- API
+function driver1_fg(param)
+	coroutine_wrap_fg(driver1_cb, param)
+end
+
+function driver2_bg(param)
+	return coroutine_wrap_bg(driver2_cb, driver2_cancel, param)
 end
 
 wait_events = coroutine.yield
