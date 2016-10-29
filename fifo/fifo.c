@@ -159,8 +159,8 @@ bool fifoPopI(fifo_t * fifo, fifo_item_t * data) {
     memcpy(data, &fifo->data[fifo->read], sizeof(fifo_item_t));
   }
   fifo->read = (fifo->read + 1) % fifo->size;
-//  chSysUnlockFromISR();
   chSemSignalI(&fifo->avaliable);
+//  chSysUnlockFromISR();
 
   if ((data->callback) && (data->status != CB_FIFO_DELETED))
     data->callback(data);

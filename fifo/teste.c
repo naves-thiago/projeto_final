@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
 #include "fifo.h"
@@ -5,12 +6,16 @@
 fifo_t fifo;
 fifo_item_t data[5];
 
+void callback(fifo_item_t *i) {
+  printf("Callback: %d\n", (int)i->data);
+}
+
 int push(char * d) {
   fifo_item_t i;
   i.data = d;
   i.data_size = 1;
   i.callback_data = 0;
-  i.callback =  NULL;
+  i.callback =  callback;
   return fifoPushWithHandle(&fifo, &i, 0);
 }
 
