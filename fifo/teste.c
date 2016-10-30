@@ -85,7 +85,9 @@ int main() {
   }
 
   fifoDelete(&fifo, -1);
+  fifoDelete(&fifo, 0);
   fifoDelete(&fifo, 1);
+  fifoDelete(&fifo, 2);
   fifoDelete(&fifo, 4);
   fifoDelete(&fifo, 10);
   fifoDelete(&fifo, 7);
@@ -116,10 +118,13 @@ int main() {
   }
 
   fifoDelete(&fifo, -1);
+  fifoDelete(&fifo, 0);
   fifoDelete(&fifo, 1);
+  fifoDelete(&fifo, 2);
   fifoDelete(&fifo, 4);
   fifoDelete(&fifo, 10);
   fifoDelete(&fifo, 7);
+  fifoDelete(&fifo, 5);
 
 
   return 0;

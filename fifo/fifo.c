@@ -185,17 +185,21 @@ bool fifoDelete(fifo_t * fifo, fifo_handle_t handle) {
 
   chSysLock();
   fifo_item_t * elem = NULL;
-  size_t index = handle % fifo->size;
 
-  if (fifo->first_handle > fifo->last_handle) {
-    if ((handle >= fifo->first_handle) || ((handle >= 0) && (handle < fifo->last_handle))) {
-      elem = &fifo->data[index];
+  if ((fifo->first_handle > fifo->last_handle) && (handle <= HANDLE_MAX)) {
+    if (handle >= fifo->first_handle) {
+      elem = &fifo->data[handle % fifo->size];
+      elem->status = CB_FIFO_DELETED;
+    }
+
+    if ((handle >= 0) && (handle < fifo->last_handle)) {
+      elem = &fifo->data[(handle + HANDLE_MAX + 1) % fifo->size];
       elem->status = CB_FIFO_DELETED;
     }
   }
   else {
     if ((handle >= fifo->first_handle) && (handle < fifo->last_handle)) {
-      elem = &fifo->data[index];
+      elem = &fifo->data[handle % fifo->size];
       elem->status = CB_FIFO_DELETED;
     }
   }

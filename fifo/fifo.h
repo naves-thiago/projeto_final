@@ -31,7 +31,8 @@ struct fifo_item_t {
   fifo_status_t status;
 };
 
-typedef int fifo_handle_t;
+typedef unsigned int fifo_handle_t;
+
 typedef struct {
   fifo_item_t * data;
   size_t size;
@@ -43,8 +44,8 @@ typedef struct {
   semaphore_t used;
 } fifo_t;
 
-#define HANDLE_INVALID (-1)
-#define HANDLE_MAX INT_MAX
+#define HANDLE_INVALID (UINT_MAX)
+#define HANDLE_MAX (UINT_MAX - 1)
 //#define HANDLE_MAX 7
 
 void fifoInit(fifo_t * fifo, fifo_item_t * data, size_t size);
