@@ -47,42 +47,42 @@ int chSemGetCounterI(semaphore_t *s) {
 }
 ////////////
 
-void fifoInit(fifo_t * fifo, fifo_item_t * data, size_t size) {
+void cbFifoInit(CBFifo * fifo, CBFifoItem * data, size_t size) {
   fifo->data = data;
-  fifo->size = size / sizeof(fifo_item_t);
+  fifo->size = size / sizeof(CBFifoItem);
   fifo->write = 0;
   fifo->read = 0;
-  fifo->first_handle = 0;
-  fifo->last_handle = 0;
+  fifo->firstHandle = 0;
+  fifo->lastHandle = 0;
   chSemObjectInit(&fifo->avaliable, fifo->size);
   chSemObjectInit(&fifo->used, 0);
 }
 
-static inline void inc_handle(fifo_handle_t *h) {
-  if (*h == HANDLE_MAX)
+static inline void incHandle(CBFifoHandle *h) {
+  if (*h == CB_FIFO_HANDLE_MAX)
     (*h) = 0;
   else
     (*h) ++;
 }
 
-fifo_handle_t fifoPushWithHandle(fifo_t * fifo, fifo_item_t * data, systime_t timeout) {
+CBFifoHandle cbFifoPushWithHandle(CBFifo * fifo, CBFifoItem * data, systime_t timeout) {
   chDbgCheck(fifo != NULL);
 
   if (chSemWaitTimeout(&fifo->avaliable, timeout) != MSG_OK)
-    return HANDLE_INVALID;
+    return CB_FIFO_HANDLE_INVALID;
 
-  fifo_handle_t ret;
+  CBFifoHandle ret;
   chSysLock();
-  ret = fifo->last_handle;
+  ret = fifo->lastHandle;
 
   // Create a new handle for the next push
-  inc_handle(&fifo->last_handle);
+  incHandle(&fifo->lastHandle);
 
-  fifo_item_t * q_data = &fifo->data[fifo->write];
+  CBFifoItem * q_data = &fifo->data[fifo->write];
   fifo->write = (fifo->write + 1) % fifo->size;
   chSysUnlock();
 
-  memcpy(q_data, data, sizeof(fifo_item_t));
+  memcpy(q_data, data, sizeof(CBFifoItem));
   q_data->status = CB_FIFO_QUEUED;
 
   // Allow pop only after copying the data
@@ -90,26 +90,26 @@ fifo_handle_t fifoPushWithHandle(fifo_t * fifo, fifo_item_t * data, systime_t ti
   return ret;
 }
 
-bool fifoPop(fifo_t * fifo, fifo_item_t * data, systime_t timeout) {
+bool cbFifoPop(CBFifo * fifo, CBFifoItem * data, systime_t timeout) {
   chDbgCheck(fifo != NULL);
 
   if (chSemWaitTimeout(&fifo->used, timeout) != MSG_OK)
     return false;
 
-  fifo_item_t * q_data;
+  CBFifoItem * q_data;
 
   chSysLock();
   q_data = &fifo->data[fifo->read];
   fifo->read = (fifo->read + 1) % fifo->size;
 
   // Invalidade the read element handle
-  inc_handle(&fifo->first_handle);
+  incHandle(&fifo->firstHandle);
 
   chSysUnlock();
 
   if (q_data->status != CB_FIFO_DELETED) {
     if (data)
-      memcpy(data, q_data, sizeof(fifo_item_t));
+      memcpy(data, q_data, sizeof(CBFifoItem));
 
     if (q_data->callback)
       q_data->callback(q_data);
@@ -126,27 +126,27 @@ bool fifoPop(fifo_t * fifo, fifo_item_t * data, systime_t timeout) {
   return true;
 }
 
-fifo_handle_t fifoPushWithHandleI(fifo_t * fifo, fifo_item_t * data) {
+CBFifoHandle cbFifoPushWithHandleI(CBFifo * fifo, CBFifoItem * data) {
   chDbgCheckClassI();
   chDbgCheck(fifo != NULL);
   chDbgCheck(data != NULL);
 
   if (chSemGetCounterI(&fifo->avaliable) == 0)
-    return HANDLE_INVALID;
+    return CB_FIFO_HANDLE_INVALID;
 
   // Create a new handle for the next push
-  fifo_handle_t ret = fifo->last_handle;
-  inc_handle(&fifo->last_handle);
+  CBFifoHandle ret = fifo->lastHandle;
+  incHandle(&fifo->lastHandle);
 
   chSemFastWaitI(&fifo->avaliable);
-  memcpy(&fifo->data[fifo->write], data, sizeof(fifo_item_t));
+  memcpy(&fifo->data[fifo->write], data, sizeof(CBFifoItem));
   fifo->data[fifo->write].status = CB_FIFO_QUEUED;
   fifo->write = (fifo->write + 1) % fifo->size;
   chSemSignalI(&fifo->used);
   return ret;
 }
 
-bool fifoPopI(fifo_t * fifo, fifo_item_t * data) {
+bool cbFifoPopI(CBFifo * fifo, CBFifoItem * data) {
   chDbgCheckClassI();
   chDbgCheck(fifo != NULL);
 
@@ -156,14 +156,14 @@ bool fifoPopI(fifo_t * fifo, fifo_item_t * data) {
   chSemFastWaitI(&fifo->used);
 
   // Invalidade the read element handle
-  inc_handle(&fifo->first_handle);
+  incHandle(&fifo->firstHandle);
 
-  fifo_item_t * q_data = &fifo->data[fifo->read];
+  CBFifoItem * q_data = &fifo->data[fifo->read];
   fifo->read = (fifo->read + 1) % fifo->size;
 
   if (q_data->status != CB_FIFO_DELETED) {
     if (data)
-      memcpy(data, q_data, sizeof(fifo_item_t));
+      memcpy(data, q_data, sizeof(CBFifoItem));
 
     if (q_data->callback)
       q_data->callback(q_data);
@@ -177,28 +177,28 @@ bool fifoPopI(fifo_t * fifo, fifo_item_t * data) {
   return true;
 }
 
-bool fifoDelete(fifo_t * fifo, fifo_handle_t handle) {
+bool cbFifoDelete(CBFifo * fifo, CBFifoHandle handle) {
   chDbgCheck(fifo != NULL);
 
-  if (handle == HANDLE_INVALID)
+  if (handle == CB_FIFO_HANDLE_INVALID)
     return false;
 
   chSysLock();
-  fifo_item_t * elem = NULL;
+  CBFifoItem * elem = NULL;
 
-  if ((fifo->first_handle > fifo->last_handle) && (handle <= HANDLE_MAX)) {
-    if (handle >= fifo->first_handle) {
+  if ((fifo->firstHandle > fifo->lastHandle) && (handle <= CB_FIFO_HANDLE_MAX)) {
+    if (handle >= fifo->firstHandle) {
       elem = &fifo->data[handle % fifo->size];
       elem->status = CB_FIFO_DELETED;
     }
 
-    if ((handle >= 0) && (handle < fifo->last_handle)) {
-      elem = &fifo->data[(handle + HANDLE_MAX + 1) % fifo->size];
+    if ((handle >= 0) && (handle < fifo->lastHandle)) {
+      elem = &fifo->data[(handle + CB_FIFO_HANDLE_MAX + 1) % fifo->size];
       elem->status = CB_FIFO_DELETED;
     }
   }
   else {
-    if ((handle >= fifo->first_handle) && (handle < fifo->last_handle)) {
+    if ((handle >= fifo->firstHandle) && (handle < fifo->lastHandle)) {
       elem = &fifo->data[handle % fifo->size];
       elem->status = CB_FIFO_DELETED;
     }
@@ -206,10 +206,10 @@ bool fifoDelete(fifo_t * fifo, fifo_handle_t handle) {
 
   // DEBUG
   if (elem) {
-    printf("Delete %d: %d\n", handle, (int)elem->data);
+    printf("Delete %u: %d\n", handle, (int)elem->data);
   }
   else
-    printf("Delete %d: Invalido\n", handle);
+    printf("Delete %u: Invalido\n", handle);
 
   chSysUnlock();
 

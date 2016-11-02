@@ -3,25 +3,25 @@
 #include <stdint.h>
 #include "fifo.h"
 
-fifo_t fifo;
-fifo_item_t data[5];
+CBFifo fifo;
+CBFifoItem data[5];
 
-void callback(fifo_item_t *i) {
+void callback(CBFifoItem *i) {
   printf("Callback: %d\n", (int)i->data);
 }
 
 int push(char * d) {
-  fifo_item_t i;
+  CBFifoItem i;
   i.data = d;
-  i.data_size = 1;
-  i.callback_data = 0;
+  i.dataSize = 1;
+  i.callbackData = 0;
   i.callback =  callback;
-  return fifoPushWithHandle(&fifo, &i, 0);
+  return cbFifoPushWithHandle(&fifo, &i, 0);
 }
 
 bool pop() {
-  fifo_item_t i;
-  if (fifoPop(&fifo, &i, 0)) {
+  CBFifoItem i;
+  if (cbFifoPop(&fifo, &i, 0)) {
     if (i.status != CB_FIFO_DELETED)
       printf("Pop: %d\n", (int)i.data);
     else // Should not happen
@@ -36,17 +36,17 @@ bool pop() {
 }
 
 int pushI(char * d) {
-  fifo_item_t i;
+  CBFifoItem i;
   i.data = d;
-  i.data_size = 1;
-  i.callback_data = 0;
+  i.dataSize = 1;
+  i.callbackData = 0;
   i.callback =  callback;
-  return fifoPushWithHandleI(&fifo, &i);
+  return cbFifoPushWithHandleI(&fifo, &i);
 }
 
 bool popI() {
-  fifo_item_t i;
-  if (fifoPopI(&fifo, &i)) {
+  CBFifoItem i;
+  if (cbFifoPopI(&fifo, &i)) {
     if (i.status != CB_FIFO_DELETED)
       printf("PopI: %d\n", (int)i.data);
     else // Should not happen
@@ -62,7 +62,7 @@ bool popI() {
 
 
 int main() {
-  fifoInit(&fifo, data, sizeof(data));
+  cbFifoInit(&fifo, data, sizeof(data));
 
   printf("Thread functions tests\n\n");
 
@@ -73,7 +73,7 @@ int main() {
 
   pop();
 
-  fifoDelete(&fifo, 2);
+  cbFifoDelete(&fifo, 2);
   //printf("Delete ID: 2\n");
 
   for (int i=0; i<6; i++)
@@ -84,18 +84,18 @@ int main() {
     printf("Push %d - ID: %d\n", i+10, id);
   }
 
-  fifoDelete(&fifo, -1);
-  fifoDelete(&fifo, 0);
-  fifoDelete(&fifo, 1);
-  fifoDelete(&fifo, 2);
-  fifoDelete(&fifo, 4);
-  fifoDelete(&fifo, 10);
-  fifoDelete(&fifo, 7);
+  cbFifoDelete(&fifo, -1);
+  cbFifoDelete(&fifo, 0);
+  cbFifoDelete(&fifo, 1);
+  cbFifoDelete(&fifo, 2);
+  cbFifoDelete(&fifo, 4);
+  cbFifoDelete(&fifo, 10);
+  cbFifoDelete(&fifo, 7);
 
   printf("\n-----------------------------\n");
   printf("IRQ functions tests\n\n");
 
-  fifoInit(&fifo, data, sizeof(data));
+  cbFifoInit(&fifo, data, sizeof(data));
 
   for (int i=0; i<6; i++) {
     int id = pushI((char *)i);
@@ -104,7 +104,7 @@ int main() {
 
   popI();
 
-  fifoDelete(&fifo, 2);
+  cbFifoDelete(&fifo, 2);
   //printf("Delete ID: 2\n");
 
   for (int i=0; i<5; i++)
@@ -117,14 +117,14 @@ int main() {
     printf("PushI %d - ID: %d\n", i+10, id);
   }
 
-  fifoDelete(&fifo, -1);
-  fifoDelete(&fifo, 0);
-  fifoDelete(&fifo, 1);
-  fifoDelete(&fifo, 2);
-  fifoDelete(&fifo, 4);
-  fifoDelete(&fifo, 10);
-  fifoDelete(&fifo, 7);
-  fifoDelete(&fifo, 5);
+  cbFifoDelete(&fifo, -1);
+  cbFifoDelete(&fifo, 0);
+  cbFifoDelete(&fifo, 1);
+  cbFifoDelete(&fifo, 2);
+  cbFifoDelete(&fifo, 4);
+  cbFifoDelete(&fifo, 10);
+  cbFifoDelete(&fifo, 7);
+  cbFifoDelete(&fifo, 5);
 
 
   return 0;

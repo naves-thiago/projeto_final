@@ -12,55 +12,54 @@ typedef int systime_t;
 ////////
 
 
-struct fifo_item_t;
-typedef struct fifo_item_t fifo_item_t;
+struct CBFifoItem;
+typedef struct CBFifoItem CBFifoItem;
 
-typedef void (*fifo_cb_t)(fifo_item_t * item);
+typedef void (*CBFifoCb)(CBFifoItem * item);
 
 typedef enum {
-  CB_FIFO_READ,
   CB_FIFO_QUEUED,
   CB_FIFO_DELETED
-} fifo_status_t;
+} CBFifoStatus;
 
-struct fifo_item_t {
+struct CBFifoItem {
   void * data;
-  intptr_t callback_data;
-  fifo_cb_t callback;
-  size_t data_size;
-  fifo_status_t status;
+  intptr_t callbackData;
+  CBFifoCb callback;
+  size_t dataSize;
+  CBFifoStatus status;
 };
 
-typedef unsigned int fifo_handle_t;
+typedef unsigned int CBFifoHandle;
+
+#define CB_FIFO_HANDLE_INVALID (UINT_MAX)
+#define CB_FIFO_HANDLE_MAX (UINT_MAX - 1)
+//#define CB_FIFO_HANDLE_MAX 7
 
 typedef struct {
-  fifo_item_t * data;
+  CBFifoItem * data;
   size_t size;
   size_t write;
   size_t read;
-  fifo_handle_t first_handle;
-  fifo_handle_t last_handle;
+  CBFifoHandle firstHandle;
+  CBFifoHandle lastHandle;
   semaphore_t avaliable;
   semaphore_t used;
-} fifo_t;
+} CBFifo;
 
-#define HANDLE_INVALID (UINT_MAX)
-#define HANDLE_MAX (UINT_MAX - 1)
-//#define HANDLE_MAX 7
-
-void fifoInit(fifo_t * fifo, fifo_item_t * data, size_t size);
-fifo_handle_t fifoPushWithHandle(fifo_t * fifo, fifo_item_t * data, systime_t timeout);
-fifo_handle_t fifoPushWithHandleI(fifo_t * fifo, fifo_item_t * data);
-bool fifoPop(fifo_t * fifo, fifo_item_t * data, systime_t timeout);
-bool fifoPopI(fifo_t * fifo, fifo_item_t * data);
-bool fifoDelete(fifo_t * fifo, fifo_handle_t handle);
+void cbFifoInit(CBFifo * fifo, CBFifoItem * data, size_t size);
+CBFifoHandle cbFifoPushWithHandle(CBFifo * fifo, CBFifoItem * data, systime_t timeout);
+CBFifoHandle cbFifoPushWithHandleI(CBFifo * fifo, CBFifoItem * data);
+bool cbFifoPop(CBFifo * fifo, CBFifoItem * data, systime_t timeout);
+bool cbFifoPopI(CBFifo * fifo, CBFifoItem * data);
+bool cbFifoDelete(CBFifo * fifo, CBFifoHandle handle);
 
 
-static inline bool fifoPushI(fifo_t * fifo, fifo_item_t * data) {
-  return fifoPushWithHandleI(fifo, data) != HANDLE_INVALID;
+static inline bool cbFifoPushI(CBFifo * fifo, CBFifoItem * data) {
+  return cbFifoPushWithHandleI(fifo, data) != CB_FIFO_HANDLE_INVALID;
 }
 
-static inline bool fifoPush(fifo_t * fifo, fifo_item_t * data, systime_t timeout) {
-  return fifoPushWithHandle(fifo, data, timeout) != HANDLE_INVALID;
+static inline bool cbFifoPush(CBFifo * fifo, CBFifoItem * data, systime_t timeout) {
+  return cbFifoPushWithHandle(fifo, data, timeout) != CB_FIFO_HANDLE_INVALID;
 }
 
