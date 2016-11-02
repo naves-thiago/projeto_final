@@ -194,7 +194,8 @@ bool cbFifoDelete(CBFifo * fifo, CBFifoHandle handle) {
       elem->status = CB_FIFO_DELETED;
     }
 
-    if ((handle >= 0) && (handle < fifo->lastHandle)) {
+    // If handle type is signed, also test if handle >= 0 here
+    if (handle < fifo->lastHandle) {
       elem = &fifo->data[(handle + CB_FIFO_HANDLE_MAX + 1) % fifo->size];
       elem->status = CB_FIFO_DELETED;
     }
