@@ -4,6 +4,7 @@
 #include <string.h>
 
 ////////////
+// These functions simulate the ChibiOS services
 #include <stdio.h>
 #define chMtxObjectInit(...)
 #define chMtxLock(...)
@@ -67,6 +68,7 @@ static inline void incHandle(CBFifoHandle *h) {
 
 CBFifoHandle cbFifoPushWithHandle(CBFifo * fifo, CBFifoItem * data, systime_t timeout) {
   chDbgCheck(fifo != NULL);
+  chDbgCheck(data != NULL);
 
   if (chSemWaitTimeout(&fifo->avaliable, timeout) != MSG_OK)
     return CB_FIFO_HANDLE_INVALID;
