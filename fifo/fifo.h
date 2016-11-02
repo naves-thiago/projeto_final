@@ -1,4 +1,3 @@
-/* Generic thread safe FIFO lib */
 #pragma once
 
 #include <stdbool.h>
@@ -12,7 +11,11 @@ typedef int semaphore_t;
 typedef int systime_t;
 ////////
 
-
+/**
+ * @defgroup cbfifo Callback FIFO
+ * @detail Thread safe FIFO with pop callback and item delete support.
+ * @{
+ */
 struct CBFifoItem;
 typedef struct CBFifoItem CBFifoItem;
 
@@ -65,46 +68,105 @@ typedef struct {
  *
  * @param[in] fifo Pointer to the fifo struct.
  * @param[in] data Memory area to store the queue items.
- * @param[in] size data size in bytes.
+ * @param[in] size @p data size in bytes.
  */
 void cbFifoInit(CBFifo * fifo, CBFifoItem * data, size_t size);
 
 /**
  * @brief Copies an item to the queue.
- * @note The item's data and callbackData contents are not copied, only the pointers are.
+ * @note The item's @p data and @p callbackData contents are not copied, only the pointers are.
  *
  * @param[in] fifo Pointer to the fifo struct.
  * @param[in] data Item to be queued.
  * @param[in] timeout Maximum time to block the thread waiting for a slot in the queue.
  *
- * @return An item handle if the item was queued.
- * @retval @p CB_FIFO_HANDLE_INVALID in case of a timeout.
+ * @return An item handle if the item was queued, @p #CB_FIFO_HANDLE_INVALID in case of a timeout.
+ *
+ * @sa cbFifoPushWithHandleI() cbFifoPush() cbFifoPushI()
  */
 CBFifoHandle cbFifoPushWithHandle(CBFifo * fifo, CBFifoItem * data, systime_t timeout);
 
 /**
  * @brief Copies an item to the queue from an ISR.
- * @note The item's data and callbackData contents are not copied, only the pointers are.
+ * @note The item's @p data and @p callbackData contents are not copied, only the pointers are.
+ *
+ * @param[in] fifo Pointer to the fifo struct.
+ * @param[in] data Item to be queued.
+ *
+ * @return An item handle if the item was queued, @p CB_FIFO_HANDLE_INVALID in case there are no avaliable slots in the queue.
+ *
+ * @sa cbFifoPushWithHandle() cbFifoPush() cbFifoPushI()
+ */
+CBFifoHandle cbFifoPushWithHandleI(CBFifo * fifo, CBFifoItem * data);
+
+/**
+ * @brief Removes the oldest item from the queue and copies it into @p data (if not NULL).
+ *
+ * @param[in] fifo Pointer to the fifo struct.
+ * @param[out] data Pointer to where the item should be copied to.
+ * @param[in] timeout Maximum amount of time to block the thread waiting for a item.
+ *
+ * @return true on success, false otherwise.
+ *
+ * @sa cbFifoPopI()
+ */
+bool cbFifoPop(CBFifo * fifo, CBFifoItem * data, systime_t timeout);
+
+/**
+ * @brief Removes the oldest item from the queue and copies it into @p data (if not NULL) from an ISR.
+ *
+ * @param[in] fifo Pointer to the fifo struct.
+ * @param[out] data Pointer to where the item should be copied to.
+ *
+ * @return true on success, false otherwise.
+ *
+ * @sa cbFifoPop()
+ */
+bool cbFifoPopI(CBFifo * fifo, CBFifoItem * data);
+
+/**
+ * @brief Flags a queued item as deleted (@p CB_FIFO_DELETED).
+ * @note A deleted item's callback will not be executed on pop, but the item will be copied
+ * to @p data.
+ *
+ * @param[in] fifo Pointer to the fifo struct.
+ * @param[in] handle Item's identifier returned by @p cbFifoPushWithHandle() or cbFifoPushWithHandleI().
+ *
+ * @return true on success, false otherwise.
+ *
+ * @sa cbFifoPushWithHandle() cbFifoPushWithHandleI() cbFifoPop() cbFifoPopI()
+ */
+bool cbFifoDelete(CBFifo * fifo, CBFifoHandle handle);
+
+/**
+ * @brief Copies an item to the queue from an ISR.
+ * @note The item's @p data and @p callbackData contents are not copied, only the pointers are.
+ *
+ * @param[in] fifo Pointer to the fifo struct.
+ * @param[in] data Item to be queued.
+ *
+ * @return true on success, false otherwise.
+ *
+ * @sa cbFifoPushWithHandle() cbFifoPushWithHandleI() cbFifoPush()
+ */
+static inline bool cbFifoPushI(CBFifo * fifo, CBFifoItem * data) {
+  return cbFifoPushWithHandleI(fifo, data) != CB_FIFO_HANDLE_INVALID;
+}
+
+/**
+ * @brief Copies an item to the queue.
+ * @note The item's @p data and @p callbackData contents are not copied, only the pointers are.
  *
  * @param[in] fifo Pointer to the fifo struct.
  * @param[in] data Item to be queued.
  * @param[in] timeout Maximum time to block the thread waiting for a slot in the queue.
  *
- * @return An item handle if the item was queued.
- * @retval @p CB_FIFO_HANDLE_INVALID in case of a timeout.
+ * @return true on success, false otherwise.
+ *
+ * @sa cbFifoPushWithHandleI() cbFifoPushWithHandle() cbFifoPushI()
  */
-CBFifoHandle cbFifoPushWithHandleI(CBFifo * fifo, CBFifoItem * data);
-
-bool cbFifoPop(CBFifo * fifo, CBFifoItem * data, systime_t timeout);
-bool cbFifoPopI(CBFifo * fifo, CBFifoItem * data);
-bool cbFifoDelete(CBFifo * fifo, CBFifoHandle handle);
-
-
-static inline bool cbFifoPushI(CBFifo * fifo, CBFifoItem * data) {
-  return cbFifoPushWithHandleI(fifo, data) != CB_FIFO_HANDLE_INVALID;
-}
-
 static inline bool cbFifoPush(CBFifo * fifo, CBFifoItem * data, systime_t timeout) {
   return cbFifoPushWithHandle(fifo, data, timeout) != CB_FIFO_HANDLE_INVALID;
 }
 
+/** @} */
