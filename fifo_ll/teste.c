@@ -158,48 +158,6 @@ int main() {
 
   for (int i=0; i<item_count; i++)
     free(items[i]);
-#if 0
-  cbFifoDelete(&fifo, items[0]);
-  cbFifoDelete(&fifo, items[1]);
-  cbFifoDelete(&fifo, items[2]);
-  cbFifoDelete(&fifo, items[4]);
-  cbFifoDelete(&fifo, items[10]);
-  cbFifoDelete(&fifo, items[7]);
 
-  printf("\n-----------------------------\n");
-  printf("IRQ functions tests\n\n");
-
-  cbFifoInit(&fifo, data, sizeof(data));
-
-  for (int i=0; i<6; i++) {
-    int id = pushI((char *)i);
-    printf("PushI %d - ID: %d\n", i, id);
-  }
-
-  popI();
-
-  cbFifoDelete(&fifo, 2);
-  //printf("Delete ID: 2\n");
-
-  for (int i=0; i<5; i++)
-    popI();
-
-  popI();
-
-  for (int i=0; i<6; i++) {
-    int id = pushI((char *)(i+10));
-    printf("PushI %d - ID: %d\n", i+10, id);
-  }
-
-  cbFifoDelete(&fifo, -1);
-  cbFifoDelete(&fifo, 0);
-  cbFifoDelete(&fifo, 1);
-  cbFifoDelete(&fifo, 2);
-  cbFifoDelete(&fifo, 4);
-  cbFifoDelete(&fifo, 10);
-  cbFifoDelete(&fifo, 7);
-  cbFifoDelete(&fifo, 5);
-
-#endif
   return 0;
 }
