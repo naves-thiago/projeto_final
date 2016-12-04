@@ -2,19 +2,30 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define BUFFER_LEN 10
+#define _GLUE(a,b) a ## b
+#define GLUE(a,b) _GLUE(a,b)
+
+#define BUFFER_LEN 11 // FIFO length will be 10
 
 typedef struct {
-  uint16_t write;  // Next write position
-  uint16_t read;   // Oldest data position
-  uint16_t length;     // FIFO length
-  char buffer[BUFFER_LEN + 1];
+  uint16_t write;    // Next write position
+  uint16_t read;     // Oldest data position
+  uint16_t length;   // FIFO length
+  char * buffer;
 } CHARFifo;
 
-void charFifoInit(CHARFifo * fifo, uint16_t length) {
+#define CHARFifoDECL(name, len) char GLUE(name, _buffer[len]);                 \
+                                CHARFifo name = {.write = 0,                   \
+                                                 .read = 0,                    \
+                                                 .length = len,                \
+                                                 .buffer = GLUE(name, _buffer) \
+                                                }
+
+void charFifoInit(CHARFifo * fifo, char * buffer, uint16_t length) {
   fifo->write = 0;
   fifo->read = 0;
-  fifo->length = length + 1;
+  fifo->length = length;
+  fifo->buffer = buffer;
 }
 
 uint16_t charFifoCount(CHARFifo * fifo) {
@@ -75,11 +86,14 @@ bool charFifoEndsWith(CHARFifo * fifo, char * b, uint16_t count) {
   return true;
 }
 
-CHARFifo fifo;
+//CHARFifo fifo;
+//char buffer[BUFFER_LEN];
+
+CHARFifoDECL(fifo, BUFFER_LEN);
 
 int main() {
 #define b2s(x) (x) ? "True " : "False"
-  charFifoInit(&fifo, BUFFER_LEN);
+//  charFifoInit(&fifo, buffer, BUFFER_LEN);
 
   while (1) {
     char c = (char)getchar();
