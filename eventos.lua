@@ -79,7 +79,7 @@ end
 
 wait_events = coroutine.yield
 
--- Teste
+-- Teste 1
 function main()
 	while true do
 		print("Ini main")
@@ -97,8 +97,29 @@ function main()
 end
 
 -- Ponto de entrada da aplicacao do usuario
-coroutine.wrap(main)()
+-- coroutine.wrap(main)()
 
 -- while(true) do
 --	espera_evento()
 -- end
+
+-- Teste 2
+function a()
+	print("ini a")
+	driver1_fg("asd")
+	print("-> a")
+	driver1_fg("")
+	print("fim a")
+end
+
+function b()
+	print("ini b")
+	x = driver2_bg("")
+	print("-> b depois do bg")
+	x.wait()
+	print("-> b depois do wait")
+	x = driver2_bg("")
+	x.wait()
+	print("fim b")
+end
+
