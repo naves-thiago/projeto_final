@@ -18,6 +18,7 @@ void print_vec(char * v, int len) {
     putchar(v[i]);
 }
 
+#if 0
 int main() {
 #define b2s(x) (x) ? "True " : "False"
 //  byteFifoInit(&fifo, buffer, BUFFER_LEN);
@@ -52,3 +53,49 @@ int main() {
 
   return 0;
 }
+#else
+int main() {
+  printf("Push 0~9\n");
+  for (int i=0; i<10; i++)
+    byteFifoPush(&fifo, i);
+
+  printf("Pop 0~9\n");
+  for (int i=0; i<10; i++) {
+    uint8_t c;
+    byteFifoPop(&fifo, &c, 1);
+    printf("-> %d\n", c);
+  }
+
+  printf("Push 0~9\n");
+  for (int i=0; i<10; i++)
+    byteFifoPush(&fifo, i);
+
+  printf("Peek 0~9\n");
+  for (int i=0; i<10; i++) {
+    uint8_t c;
+    c = byteFifoPeekNth(&fifo, i);
+    printf("-> %d\n", c);
+  }
+
+  printf("Replace 5 -> 11\n");
+  byteFifoReplaceNth(&fifo, 5, 11);
+
+  printf("Peek 0~9\n");
+  for (int i=0; i<10; i++) {
+    uint8_t c;
+    c = byteFifoPeekNth(&fifo, i);
+    printf("-> %d\n", c);
+  }
+
+  printf("Replace 0~9\n");
+  for (int i=0; i<10; i++)
+    byteFifoReplaceNth(&fifo, i, i+20);
+
+  printf("Pop 0~9\n");
+  for (int i=0; i<10; i++) {
+    uint8_t c;
+    byteFifoPop(&fifo, &c, 1);
+    printf("-> %d\n", c);
+  }
+}
+#endif

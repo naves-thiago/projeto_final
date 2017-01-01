@@ -130,6 +130,31 @@ bool byteFifoBeginsWith(BYTEFifo * fifo, uint8_t * b, uint16_t count);
 bool byteFifoEndsWith(BYTEFifo * fifo, uint8_t * b, uint16_t count);
 
 /**
+ * @brief Returns the byte at the n-th position in the queue (starting from 0).
+ * @note If n > bytes in the fifo, result is undefined (but safe).
+ *
+ * @param[in] fifo The FIFO instance
+ * @param[in] n The byte position in the queue
+ *
+ * @return The n-th byte in the queue
+ *
+ * @sa byteFifoReplaceNth()
+ */
+uint8_t byteFifoPeekNth(BYTEFifo * fifo, uint16_t n);
+
+/**
+ * @brief Replaces the byte at the n-th position in the queue (starting from 0).
+ * @note If n > bytes in the fifo, result is undefined (but safe).
+ *
+ * @param[in] fifo The FIFO instance
+ * @param[in] n The byte position in the queue
+ * @param[in] b The new value
+ *
+ * @sa byteFifoPeekNth()
+ */
+void byteFifoReplaceNth(BYTEFifo * fifo, uint16_t n, uint8_t b);
+
+/**
  * @brief This macro declares a FIFO and the data buffer and initializes them
  *
  * @param[in] name The FIFO variable name. The data vector will be called <name>_buffer

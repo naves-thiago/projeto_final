@@ -94,3 +94,10 @@ bool byteFifoEndsWith(BYTEFifo * fifo, uint8_t * b, uint16_t count) {
   return true;
 }
 
+uint8_t byteFifoPeekNth(BYTEFifo * fifo, uint16_t n) {
+  return fifo->buffer[(fifo->read + n) % fifo->length];
+}
+
+void byteFifoReplaceNth(BYTEFifo * fifo, uint16_t n, uint8_t b) {
+  fifo->buffer[(fifo->read + n) % fifo->length] = b;
+}
